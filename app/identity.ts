@@ -5,8 +5,8 @@
  * change here reaches every one of them. Keep `name` short and `description` one plain sentence.
  */
 export const identity = {
-  name: "Capital cities quiz",
-  description: "A quick quiz on world capitals: 10 questions, multiple choice, a score at the end with a Share result button that posts an image card of my score, and a…",
-  accent: "#c2410c",
+  name: "Capital Cities Quiz",
+  description: "A quick quiz on world capitals: ten multiple-choice questions, a score and a shareable result card, with your best score and attempt history kept in the browser.",
+  accent: "#0e7490",
   initial: "C",
 } as const;

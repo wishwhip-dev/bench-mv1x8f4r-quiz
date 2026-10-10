@@ -2,23 +2,23 @@
  * This application's database.
  *
  * The reusable half of the setup is in `lib/storage/` and is not edited. This file is the half
- * that describes the product: which tables exist, what is indexed, how the schema has changed over
- * time, and what a first visit starts with.
+ * that describes the product: which tables exist, what is indexed, and how the schema has changed
+ * over time.
  *
- * **The schema below is an example and nobody has data in it.** If you are building this
- * application for the first time, replace the tables in version 1 with your own, rename the
- * database, and replace or delete the seed alongside them — do not add a version 2 that drops
- * `notes`. The "never edit a shipped version" rule in `docs/storage.md` binds from your first
- * deployment onward, not before it.
+ * A quiz keeps one thing worth remembering: each completed attempt, with its score and when it
+ * was played. The best score and the number of quizzes played are derived from these rows in
+ * `lib/data/attempts.ts`, so there is no second table to keep in step.
  */
 import { defineDatabase } from "@/lib/storage/database";
 
-export type Note = {
+export type Attempt = {
   id: string;
-  title: string;
-  body: string;
-  /** Epoch millis. Indexed, because the list is ordered by it. */
-  updatedAt: number;
+  /** How many of the 10 questions were answered correctly. */
+  score: number;
+  /** Always 10 for this quiz; stored so the history stays honest if the quiz ever grows. */
+  total: number;
+  /** Epoch millis. Indexed, because the history is ordered by it. */
+  playedAt: number;
 };
 
 /** Ids are generated here so the data layer never depends on an auto-increment round trip. */
@@ -26,36 +26,16 @@ export function newId(): string {
   return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-/** What a first visit opens to. An app that opens empty looks broken. */
-const SAMPLE_NOTES: Note[] = [
-  {
-    id: "sample-welcome",
-    title: "This note came with the app",
-    body: "It was written once, on your first visit. Delete it and it stays deleted — the seed does not refill a list you emptied on purpose.",
-    updatedAt: Date.now(),
-  },
-  {
-    id: "sample-storage",
-    title: "Everything here lives in this browser",
-    body: "No account, no sync, no other visitor can see it. Export to a file to carry it anywhere else.",
-    updatedAt: Date.now() - 60_000,
-  },
-];
-
-export const database = defineDatabase<{ notes: Note }>({
+export const database = defineDatabase<{ attempts: Attempt }>({
   // Part of the origin's storage identity. Renaming it does not migrate anything — it points the
   // application at a different, empty database and abandons the old one in place. That is exactly
   // what you want on a first build, and never what you want afterwards.
-  name: "starter-app",
+  name: "capitals-quiz",
   versions: [
-    // Only the primary key and the properties queried on. `title` and `body` are stored but never
-    // filtered or sorted by, so indexing them would cost writes and buy nothing.
-    { version: 1, stores: { notes: "id, updatedAt" } },
+    // Only the primary key and the properties queried on. `total` is stored but never filtered or
+    // sorted by, so indexing it would cost writes and buy nothing.
+    { version: 1, stores: { attempts: "id, playedAt" } },
   ],
-  // Written once, inside `ready()`, in one transaction with its own marker. Do not hand-roll this:
-  // no `meta` table, no flag, no promise to dedupe a double mount — see `docs/storage.md`.
-  seed: {
-    tables: ["notes"],
-    run: async (db) => { await db.notes.bulkAdd(SAMPLE_NOTES); },
-  },
+  // No seed: a quiz with no attempts yet is the honest starting state, and the home screen says so
+  // rather than inventing history.
 });
