@@ -57,9 +57,15 @@ export function ResultsScreen({
             </CardContent>
           </Card>
         ) : newBest ? (
-          <p className="mt-4 font-semibold text-foreground">
-            <Badge>New personal best</Badge> You beat your previous best of {previousBest}.
-          </p>
+          previousBest === null ? (
+            <p className="mt-4 font-semibold text-foreground">
+              <Badge>Score to beat</Badge> Your first quiz — this is now your best.
+            </p>
+          ) : (
+            <p className="mt-4 font-semibold text-foreground">
+              <Badge>New personal best</Badge> You beat your previous best of {previousBest}.
+            </p>
+          )
         ) : previousBest === null ? (
           <p className="mt-4 text-sm text-muted-foreground">
             Your first quiz — every score after this one is measured against it.
