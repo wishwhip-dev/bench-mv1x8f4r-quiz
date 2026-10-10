@@ -129,6 +129,15 @@ export function QuizApp() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [answer, picked, screen]);
 
+  const quit = useCallback(() => {
+    // Leaving mid-quiz must not let a pending reveal land the visitor on the results screen.
+    if (revealTimer.current !== null) {
+      window.clearTimeout(revealTimer.current);
+      revealTimer.current = null;
+    }
+    setScreen("home");
+  }, []);
+
   if (screen === "quiz") {
     return (
       <QuizScreen
@@ -137,7 +146,7 @@ export function QuizApp() {
         picked={picked}
         correctCount={answers.filter((a) => a.isCorrect).length}
         onAnswer={answer}
-        onQuit={() => setScreen("home")}
+        onQuit={quit}
       />
     );
   }
@@ -201,9 +210,11 @@ function HomeScreen({
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <Badge variant="outline" className="mb-3">
-          {attempts?.length ? `${played} ${played === 1 ? "quiz" : "quizzes"} played` : "First visit?"}
-        </Badge>
+        {!isLoading && attempts && attempts.length > 0 ? (
+          <Badge variant="outline" className="mb-3">
+            {played} {played === 1 ? "quiz" : "quizzes"} played
+          </Badge>
+        ) : null}
         <h1 className="text-3xl font-bold tracking-tight text-balance sm:text-4xl">
           {identity.name}
         </h1>
