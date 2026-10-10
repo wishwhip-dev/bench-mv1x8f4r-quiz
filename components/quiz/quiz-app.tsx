@@ -22,7 +22,6 @@ import { identity } from "@/app/identity";
 import {
   buildQuiz,
   QUESTION_COUNT,
-  shuffle,
   type AnsweredQuestion,
   type Outcome,
   type Question,
@@ -111,9 +110,13 @@ export function QuizApp() {
     if (screen !== "quiz") return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.metaKey || event.ctrlKey || event.altKey || event.repeat) return;
-      // Enter does nothing on any question, answered or not: the next question appears when the
-      // reveal pause after answering is over, and never skips it.
-      if (event.key === "Enter") return;
+      // Enter answers nothing and skips nothing: not an unanswered question, and not the reveal
+      // pause after an answer. Preventing the default also stops it re-activating a focused
+      // option button, which would otherwise count as answering.
+      if (event.key === "Enter") {
+        event.preventDefault();
+        return;
+      }
       if (event.key >= "1" && event.key <= "4") {
         // Keys 1–4 answer while the question is open and are locked out during the reveal.
         if (picked === null) {
